@@ -7,7 +7,13 @@ int my_strlen(char *str) {
      */
 
     // IMPLEMENT YOUR CODE HERE
-    return 0;
+    int len = 0;
+
+    for (int i = 0; str[i] != '\0'; ++i ){
+        len++; 
+    }
+
+    return len;
 }
 
 
@@ -19,6 +25,10 @@ void my_strcat(char *str_1, char *str_2) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    int len = my_strlen(str_1);
+    for (int i = 0 ; i < my_strlen(str_2) + 1; ++i){
+        str_1[len+i] = str_2[i];
+    }
 }
 
 
@@ -31,6 +41,14 @@ char* my_strstr(char *s, char *p) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    for (int beginning = 0; beginning < my_strlen(s); ++beginning){
+        for (int searchIndex = 0; searchIndex < my_strlen(p); ++searchIndex){
+            if(s[beginning+searchIndex] != p[searchIndex]) 
+                break;
+            if(searchIndex == my_strlen(p)-1) return &s[beginning];
+            }
+        }
+    
     return 0;
 }
 
@@ -97,10 +115,52 @@ void rgb2gray(float *in, float *out, int h, int w) {
 
     // IMPLEMENT YOUR CODE HERE
     // ...
+    int pixelPosition = 0;
+    int grayPixelPosition = 0;
+    for(int i = 0;i < h; ++i){
+        for (int j = 0; j < w; ++j){
+                float value = 0.1140 * in[pixelPosition + 2]  + 0.5870 * in[pixelPosition+1] + 0.2989 * in[pixelPosition+0];
+                out[grayPixelPosition] = value;
+                grayPixelPosition += 1;
+                pixelPosition += 3;
+        }
+    }
 }
 
 // 练习5，实现图像处理算法 resize：缩小或放大图像
 void resize(float *in, float *out, int h, int w, int c, float scale) {
+    int new_h = (int)(h * scale);
+    int new_w = (int)(w * scale);
+
+    for (int i = 0; i < new_h; i++) {
+        for (int j = 0; j < new_w; j++) {
+            float x = j / scale;
+            float y = i / scale;
+
+            int x0 = (int)x;
+            int y0 = (int)y;
+            int x1 = x0 + 1 < w ? x0 + 1 : x0; 
+            int y1 = y0 + 1 < h ? y0 + 1 : y0; 
+
+            float dx = x - x0;
+            float dy = y - y0;
+
+            for (int k = 0; k < c; k++) {
+                float q00 = in[(y0 * w + x0) * c + k];
+                float q10 = in[(y0 * w + x1) * c + k];
+                float q01 = in[(y1 * w + x0) * c + k];
+                float q11 = in[(y1 * w + x1) * c + k];
+
+                float q = (1 - dx) * (1 - dy) * q00 +
+                    dx * (1 - dy) * q10 +
+                    (1 - dx) * dy * q01 +
+                    dx * dy * q11;
+
+                out[(i * new_w + j) * c + k] = q;
+            }
+        }
+    }
+}
     /**
      * 图像处理知识：
      *  1.单线性插值法
@@ -196,10 +256,6 @@ void resize(float *in, float *out, int h, int w, int c, float scale) {
      *        所以需要对其进行边界检查
      */
 
-    int new_h = h * scale, new_w = w * scale;
-    // IMPLEMENT YOUR CODE HERE
-
-}
 
 
 // 练习6，实现图像处理算法：直方图均衡化
@@ -221,4 +277,18 @@ void hist_eq(float *in, int h, int w) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+ int histogram[256] = { 0 };
+
+    for (int i = 0; i < h; i++) {
+        for (int j = 0; j < w; j++) {
+            int pixel_value = (int)(in[i * w + j]);
+            histogram[pixel_value]++;
+        }
+    }
+
+    
+    float cdf[256] = { 0 };
+    cdf[0] = histogram[0];
+    for (int i = 1; i < 256; i++) {
+        cdf[i] = cdf[i - 1] + histogram[i];
 }
